@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model breaker {
+  id                  Int                @default(autoincrement())
+  rack_id             Int
+  codigo              String
+  polos               Int
+  ampacidad           String
+  marca               String
+  tipo_alimentador    String
+  calibre_alimentador String
+  rack                rack               @relation(fields: [rack_id], references: [id])
+  breakers_canales    breakers_canales[]
+
+  @@id([id, rack_id])
+  @@index([rack_id], name: "fk_breaker_rack1_idx")
+}
+
+model breakers_canales {
+  id         Int     @default(autoincrement())
+  canales_id Int
+  breaker_id Int
+  breaker    breaker @relation(fields: [breaker_id], references: [id])
+  canales    canales @relation(fields: [canales_id], references: [id])
+
+  @@id([id, canales_id, breaker_id])
+  @@index([breaker_id], name: "fk_breakers_canales_breaker1_idx")
+  @@index([canales_id], name: "fk_breakers_canales_canales1_idx")
+}
+
+model canales {
+  id               Int                @default(autoincrement())
+  pdi_id           Int
+  nombre           String
+  lado             String
+  pdi              pdi                @relation(fields: [pdi_id], references: [id])
+  breakers_canales breakers_canales[]
+
+  @@id([id, pdi_id])
+  @@index([pdi_id], name: "fk_canales_pdi1_idx")
+}
+
+model cliente {
+  id      Int    @default(autoincrement()) @id
+  codigo  String @unique
+  empresa String @unique
+  rack    rack[]
+}
+
+model pdi {
+  id       Int       @default(autoincrement()) @id
+  nombre   String    @unique
+  potencia String?
+  canales  canales[]
+}
+
+model rack {
+  id         Int       @default(autoincrement())
+  cliente_id Int
+  coordenada String
+  nombre     String
+  cliente    cliente   @relation(fields: [cliente_id], references: [id])
+  breaker    breaker[]
+
+  @@id([id, cliente_id])
+  @@index([cliente_id], name: "fk_rack_cliente_idx")
+}
